@@ -1,10 +1,12 @@
-void swap(unsigned char *a, unsigned char *b)  {  
-    unsigned char temp = *a;  
+#include <ESP8266WiFi.h>
+
+void swap(byte *a, byte *b)  {  
+    byte temp = *a;  
     *a = *b;  
     *b = temp;  
 }  
 
-void bubbleSort(unsigned char arr[], int n) {   //borrowed directly from the internet  
+void bubbleSort(byte arr[], int n) {   //borrowed directly from the internet  
     int i, j;  
     for (i = 0; i < n-1; i++)
     for (j = 0; j < n-i-1; j++)  
@@ -12,6 +14,6 @@ void bubbleSort(unsigned char arr[], int n) {   //borrowed directly from the int
             swap(&arr[j], &arr[j+1]);  
 }  
 
-unsigned char getCurrentTime(){
+byte getCurrentTime(){
     return nistToOurTimestamp(get(nist.website:time));
 }

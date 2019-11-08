@@ -1,9 +1,10 @@
-#include<iostream>
+#include <iostream>
+#include <ESP8266WiFi.h>
 using namespace std;
 
 int main(){
-    unsigned char c = 0;
+    byte c = 0;
     while (++c>0){
-        cout<<(int)c<<endl;
+        cout<<c<<endl;
     }
 }
