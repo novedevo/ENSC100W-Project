@@ -16,9 +16,9 @@ using namespace std;
 ////void setup(){
     float currentMillis = millis();
     WiFiServer server(80);
-    unsigned char feedingTimes[4] = {0,1,250,12};
+    byte feedingTimes[4] = {0,1,250,12};
     bool timesFed[4] = {0,0,0,0};
-    unsigned char currentTime = getCurrentTime();
+    byte currentTime = getCurrentTime();
 ////}
 
 
