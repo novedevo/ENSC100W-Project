@@ -1,5 +1,8 @@
 #include <iostream>
 #include <included.h>
+#include <deal-with-time.cpp>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 //#include<algorithm>
 #include <ESP8266WiFi.h>
 using namespace std;
@@ -13,13 +16,26 @@ using namespace std;
 //      1550 hours = 155
 //      00:00 = 000
 
-////void setup(){
-    float currentMillis = millis();
+
+//declaring constants and variables
+const char *ssid     = "YOUR_SSID";
+const char *password = "YOUR_PASS";
+
+long utcOffsetInSeconds = -8*60*60;
+unsigned long currentMillis;
+byte feedingTimes[4] = {000,100,230,120};
+bool timesFed[4] = {0,0,0,0};
+byte currentTime = 0;
+
+void setup(){
+    currentMillis = millis();
+    WiFiUDP ntpUDP;
+    NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+    timeClient.begin();
     WiFiServer server(80);
-    byte feedingTimes[4] = {0,1,250,12};
-    bool timesFed[4] = {0,0,0,0};
-    byte currentTime = getCurrentTime();
-////}
+    
+    currentTime = getCurrentTime();
+}
 
 
 // Swaps a with b
