@@ -24,11 +24,12 @@ const char *ssid     = "YOUR_SSID";
 const char *password = "YOUR_PASS";
 
 long utcOffsetInSeconds = -8*60*60;
-unsigned long currentMillis;
+unsigned long currentMillis = 0;
+unsigned long networkMillis = 0;
 byte feedingTimes[4] = {000,100,230,120};
 bool timesFed[4] = {0,0,0,0};
 byte currentTime = 0;
-
+byte networkTimeByte = 0;
 
 void setup(){
     currentMillis = millis();
@@ -37,15 +38,17 @@ void setup(){
     timeClient.begin();
     WiFiServer server(80);
     
-    currentTime = getCurrentTime();
+    networkTimeByte = getCurrentTimeByte(&networkMillis);
 }
 
 
-void placeholder(){
+void loop(){
 
     bubbleSort(feedingTimes, sizeof(feedingTimes)/sizeof(feedingTimes[0]));
-    currentTime = toUnsignedChar(millis());
-    if (!timesFed[i] && feedingTimes[i]>=toUnsignedChar(currentTime)){;}
+    
+    currentTime = networkTimeByte + (((millis()-networkMillis)/1000) /10);
+    
+    if (!timesFed[i] && timeByteToMillis(feedingTimes[i])>=currentTime){;}
 
     interrupt( (postRequest)){
         if (numberOfTurns){
@@ -60,8 +63,4 @@ void placeholder(){
         }
 
     }
-}
-
-int main(){
-    placeholder();
 }
