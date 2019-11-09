@@ -26,6 +26,7 @@ const char *password = "YOUR_PASS";
 long utcOffsetInSeconds = -8*60*60;
 unsigned long currentMillis = 0;
 unsigned long networkMillis = 0;
+unsigned long millisAt000 = 0;
 byte feedingTimes[4] = {000,100,230,120};
 bool timesFed[4] = {0,0,0,0};
 byte currentTime = 0;
@@ -46,8 +47,8 @@ void loop(){
 
     bubbleSort(feedingTimes, sizeof(feedingTimes)/sizeof(feedingTimes[0]));
     
-    currentTime = networkTimeByte + (((millis()-networkMillis)/1000) /10);
-    
+    currentTime = millisToTimeByte(millis() - millisAtMidnight(networkMillis, networkTimeByte));
+
     if (!timesFed[i] && timeByteToMillis(feedingTimes[i])>=currentTime){;}
 
     interrupt( (postRequest)){

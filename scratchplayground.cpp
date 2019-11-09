@@ -31,25 +31,25 @@ unsigned char millisToTimeByte(unsigned long timeInMillis){
 }
 
 //iterates through all values of a given item, for testing purposes
-int iterateThroughValues(){
+int iterateThroughValues(void){
     unsigned char c = 0;
     while (++c > 0){
         cout << c << endl;
     }
 }
 
-int main(){
+int main(void){
     unsigned char timeByte = 235;
     
     try {
-        cout<< static_cast<int>(millisToTimeByte(timeByteToMillis(timeByte)));
+        cout<< static_cast<int>(millisToTimeByte(timeByteToMillis(timeByte))) << endl;
     }
     
     catch(const char* msg){
-        cerr << msg<<endl;
+        cerr << msg << endl;
     }
     
     catch(...){
-        cerr << "Unknown Exception"<<endl;
+        cerr << "Unknown Exception" << endl;
     }
 }
