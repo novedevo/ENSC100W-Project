@@ -8,14 +8,16 @@
 using namespace std;
 
 //*     example times 
-//      12:00am = 000
-//      1:00am = 010
-//      4:30am = 043
-//      12:00pm = 120
-//      8:20pm = 202
-//      1550 hours = 155
-//      00:00 = 000
-
+/*      12:00am   =>  000
+        1:00am    =>  010
+        4:30am    =>  043
+        12:00pm   =>  120
+        8:20pm    =>  202
+        1550 hrs  =>  155
+        00:00     =>  000
+        5:42am    =>  054
+        5:49am    =>  054
+*/
 
 //declaring constants and variables
 const char *ssid     = "YOUR_SSID";
@@ -27,6 +29,7 @@ byte feedingTimes[4] = {000,100,230,120};
 bool timesFed[4] = {0,0,0,0};
 byte currentTime = 0;
 
+
 void setup(){
     currentMillis = millis();
     WiFiUDP ntpUDP;
@@ -36,10 +39,6 @@ void setup(){
     
     currentTime = getCurrentTime();
 }
-
-
-// Swaps a with b
-
 
 
 void placeholder(){
@@ -61,14 +60,6 @@ void placeholder(){
         }
 
     }
-}
-
-void placeholder2(){
-    unsigned long previousMillis = 0;
-    unsigned long currentMillis = millis();
-    if ((unsigned long)(currentMillis - previousMillis) >= interval) {;}
-    previousMillis = currentMillis;
-    delay(5*1000*60);
 }
 
 int main(){
