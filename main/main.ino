@@ -1,19 +1,53 @@
-/*********
-  Rui Santos
-  Complete project details at http://randomnerdtutorials.com  
-*********/
-
-// Load Wi-Fi library
+//#include <iostream>
+//#include "included.cpp"
+//#include "deal-with-time.cpp"
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+#include "Time.h"
+//#include<algorithm>
 #include <ESP8266WiFi.h>
+using namespace std;
 
-// Replace with your network credentials
-const char* ssid     = "Pixel_7589";
-const char* password = "***REMOVED***";
+//*     example times 
+/*      12:00am   =>  000
+        1:00am    =>  010
+        4:30am    =>  043
+        12:00pm   =>  120
+        8:20pm    =>  202
+        1550 hrs  =>  155
+        00:00     =>  000
+        5:42am    =>  054
+        5:49am    =>  054
 
-// Set web server port number to 80
-WiFiServer server(80);
+        Invalid Times:
+        Anything where the first two digits aren't between 0 and 23 inclusive,
+        or the last digit isn't between 0 and 5 inclusive.
 
-// Variable to store the HTTP request
+        (0 <first two digits <= 23) && 
+
+        for example:
+        240
+        239
+        006
+
+*/
+
+//declaring constants and variables
+const char *ssid     = "Aesthetics_Guest";
+const char *password = "TB_Guest";
+
+long utcOffsetInSeconds = -8*60*60;
+unsigned long currentMillis = 0;
+unsigned long networkMillis = 0;
+unsigned long debugNetworkMillis = 0;
+unsigned long millisAt000 = 0;
+byte feedingTimes[4] = {000,100,230,120};
+bool timesFed[4] = {0,0,0,0};
+byte networkTimeByte = 0;
+byte debugNetworkTimeByte = 0;
+byte currentTime = 0;
+
+//store HTTP request
 String header;
 
 // Auxiliar variables to store the current output state
@@ -23,49 +57,28 @@ String output4State = "off";
 // Assign output variables to GPIO pins
 const int output5 = 5;
 const int output4 = 4;
+Time myTime;
 
 // Current time
-unsigned long currentTime = millis();
+unsigned long currentMillisTime = millis();
 // Previous time
 unsigned long previousTime = 0; 
 // Define timeout time in milliseconds (example: 2000ms = 2s)
 const long timeoutTime = 2000;
 
-void setup() {
-  Serial.begin(115200);
-  // Initialize the output variables as outputs
-  pinMode(output5, OUTPUT);
-  pinMode(output4, OUTPUT);
-  // Set outputs to LOW
-  digitalWrite(output5, LOW);
-  digitalWrite(output4, LOW);
+WiFiServer server(80);
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
-  // Connect to Wi-Fi network with SSID and password
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  // Print local IP address and start web server
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  server.begin();
-}
-
-void loop(){
-  WiFiClient client = server.available();   // Listen for incoming clients
-
+void handleClients(){
+  WiFiClient client = server.available();   //Listen for incoming clients
   if (client) {                             // If a new client connects,
     Serial.println("New Client.");          // print a message out in the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
-    currentTime = millis();
-    previousTime = currentTime;
-    while (client.connected() && currentTime - previousTime <= timeoutTime) { // loop while the client's connected
-      currentTime = millis();         
+    currentMillisTime = millis();
+    previousTime = currentMillisTime;
+    while (client.connected() && currentMillisTime - previousTime <= timeoutTime) { // loop while the client's connected
+      currentMillisTime = millis();         
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
         Serial.write(c);                    // print it out the serial monitor
@@ -152,4 +165,44 @@ void loop(){
     Serial.println("Client disconnected.");
     Serial.println("");
   }
+}
+
+void setup(){
+    Serial.begin(9600);
+    //currentMillis = millis();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+
+    Serial.println("");
+    Serial.println("WiFi connected.");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    server.begin();
+    
+    timeClient.begin();
+    
+    networkTimeByte = myTime.getCurrentNetworkTimeByte(&networkMillis, timeClient);
+    Serial.println(networkMillis);
+    Serial.println(networkTimeByte);
+}
+
+void loop(){
+    ////bubbleSort(feedingTimes, sizeof(feedingTimes)/sizeof(feedingTimes[0]));
+    Serial.println(millis());
+    Serial.print("Current time from network is: ");
+    debugNetworkTimeByte = myTime.getCurrentNetworkTimeByte(&debugNetworkMillis, timeClient);
+    Serial.println((debugNetworkTimeByte));
+    currentTime = myTime.millisToTimeByte(millis() - myTime.millisAtMidnight(networkMillis, networkTimeByte));
+
+    Serial.print("Current estimated time from millis() is: ");
+    Serial.println((currentTime));
+
+    handleClients();
+
+    delay(1000);
 }

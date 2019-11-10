@@ -17,6 +17,18 @@ using namespace std;
         00:00     =>  000
         5:42am    =>  054
         5:49am    =>  054
+
+        Invalid Times:
+        Anything where the first two digits aren't between 0 and 23 inclusive,
+        or the last digit isn't between 0 and 5 inclusive.
+
+        (0 <first two digits <= 23) && 
+
+        for example:
+        240
+        239
+        006
+
 */
 
 //declaring constants and variables
