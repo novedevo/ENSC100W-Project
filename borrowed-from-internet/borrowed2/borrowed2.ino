@@ -4,8 +4,8 @@
 #include <ESP8266WiFi.h>
 
 // WiFi settings
-const char* ssid = "wifi-name";
-const char* password = "wifi-password";
+const char* ssid = "Aesthetics_Guest";
+const char* password = "TB_Guest";
 
 // Time to sleep (in seconds):
 const int sleepTimeS = 10;

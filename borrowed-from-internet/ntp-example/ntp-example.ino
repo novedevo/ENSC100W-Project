@@ -2,8 +2,8 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-const char *ssid     = "YOUR_SSID";
-const char *password = "YOUR_PASS";
+const char *ssid     = "Aesthetics_Guest";
+const char *password = "TB_Guest";
 
 const long utcOffsetInSeconds = -8*60*60;
 
@@ -36,7 +36,7 @@ void loop() {
   Serial.print(timeClient.getMinutes());
   Serial.print(":");
   Serial.println(timeClient.getSeconds());
-  //Serial.println(timeClient.getFormattedTime());
+  Serial.println(timeClient.getFormattedTime());
 
   delay(1000);
 }
