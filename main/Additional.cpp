@@ -1,76 +1,47 @@
-//#include <iostream>
-//#include "included.cpp"
-//#include "deal-with-time.cpp"
-#include <NTPClient.h>
-#include <WiFiUdp.h>
 #include "Additional.h"
-//#include<algorithm>
-#include <ESP8266WiFi.h>
-using namespace std;
 
-//*     example times 
-/*      12:00am   =>  000
-        1:00am    =>  010
-        4:30am    =>  043
-        12:00pm   =>  120
-        8:20pm    =>  202
-        1550 hrs  =>  155
-        00:00     =>  000
-        5:42am    =>  054
-        5:49am    =>  054
+unsigned long Time::timeByteToMillis(byte timeByte){
+    int hours = timeByte / 10;
+    int minutes = (timeByte % 10) * 10;
+  
+    if (hours >= 24 || minutes >= 60) {   //impossible times in standard 24-hours time
+      return 0;
+      //throw "invalidTimeByte";
+    }
+  
+    unsigned long timeInMillis = (hours * 60 + minutes) * 60 * 1000;
+    return timeInMillis;
+}
 
-        Invalid Times:
-        Anything where the first two digits aren't between 0 and 23 inclusive,
-        or the last digit isn't between 0 and 5 inclusive.
+byte Time::millisToTimeByte(unsigned long timeInMillis) {
+  int hours = timeInMillis / 1000 / 60 / 60;
+  int minutes = (timeInMillis / 1000 / 60 ) - hours * 60;
 
-        (0 <first two digits <= 23) && 
+  if (minutes>=60){
+    return 0;
+  }
+  
+  if (hours >= 24) {   //impossible times in standard 24-hours time
+    hours = hours%24;
+    //throw "invalidMillisTime";
+  }
+  
+  byte timeByte = hours * 10 + minutes / 10;
+  return timeByte;
+}
 
-        for example:
-        240
-        239
-        006
+byte Time::getCurrentNetworkTimeByte(unsigned long* networkMillis, NTPClient timeClient) {
+    timeClient.update();
+    *networkMillis = millis();
+    return (timeClient.getHours() * 10 + timeClient.getMinutes() / 10);
+}
 
-*/
+unsigned long Time::millisAtMidnight(unsigned long networkMillis, unsigned char networkTimeByte) {
+  unsigned long millisAtMidnight = networkMillis - timeByteToMillis(networkTimeByte);
+  return millisAtMidnight;
+}
 
-//declaring constants and variables
-const char *ssid     = "Aesthetics_Guest";
-const char *password = "TB_Guest";
-
-long utcOffsetInSeconds = -8*60*60;
-unsigned long currentMillis = 0;
-unsigned long networkMillis = 0;
-unsigned long debugNetworkMillis = 0;
-unsigned long millisAt000 = 0;
-byte feedingTimes[4] = {000,100,230,120};
-bool timesFed[4] = {0,0,0,0};
-byte networkTimeByte = 0;
-byte debugNetworkTimeByte = 0;
-byte currentTime = 0;
-
-//store HTTP request
-String header;
-
-// Auxiliar variables to store the current output state
-String output5State = "off";
-String output4State = "off";
-
-// Assign output variables to GPIO pins
-const int output5 = 5;
-const int output4 = 4;
-Time myTime;
-
-// Current time
-unsigned long currentMillisTime = millis();
-// Previous time
-unsigned long previousTime = 0; 
-// Define timeout time in milliseconds (example: 2000ms = 2s)
-const long timeoutTime = 2000;
-
-WiFiServer server(80);
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
-
-void handleClients(){
+/*void myWebserver::handleClients(){
   WiFiClient client = server.available();   //Listen for incoming clients
   if (client) {                             // If a new client connects,
     Serial.println("New Client.");          // print a message out in the serial port
@@ -165,44 +136,4 @@ void handleClients(){
     Serial.println("Client disconnected.");
     Serial.println("");
   }
-}
-
-void setup(){
-    Serial.begin(9600);
-    //currentMillis = millis();
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-    }
-
-    Serial.println("");
-    Serial.println("WiFi connected.");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
-    server.begin();
-    
-    timeClient.begin();
-    
-    networkTimeByte = myTime.getCurrentNetworkTimeByte(&networkMillis, timeClient);
-    Serial.println(networkMillis);
-    Serial.println(networkTimeByte);
-}
-
-void loop(){
-    ////bubbleSort(feedingTimes, sizeof(feedingTimes)/sizeof(feedingTimes[0]));
-    Serial.println(millis());
-    Serial.print("Current time from network is: ");
-    debugNetworkTimeByte = myTime.getCurrentNetworkTimeByte(&debugNetworkMillis, timeClient);
-    Serial.println((debugNetworkTimeByte));
-    currentTime = myTime.millisToTimeByte(millis() - myTime.millisAtMidnight(networkMillis, networkTimeByte));
-
-    Serial.print("Current estimated time from millis() is: ");
-    Serial.println((currentTime));
-
-    handleClients();
-
-    delay(1000);
-}
+}*/

@@ -3,8 +3,8 @@
 //#include<algorithm>
 #include <ESP8266WiFi.h>
 
-#ifndef TIME_H
-#define TIME_H
+#ifndef ADDITIONAL_H
+#define ADDITIONAL_H
 
 class Time{
 private:
