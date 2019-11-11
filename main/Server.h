@@ -6,7 +6,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-class Webserver{
+class ConfigServer : public WiFiServer{
   private:
 
   //WiFiServer server(80);
@@ -20,7 +20,6 @@ class Webserver{
   // Assign output variables to GPIO pins
   const int output5 = 5;
   const int output4 = 4;
-  Time myTime;
 
   // Current time
   unsigned long currentMillisTime = millis();
@@ -30,7 +29,8 @@ class Webserver{
   const long timeoutTime = 2000;
   
   public:
-  void handleClients(WiFiServer* server);
+  void handleClients();
+  explicit ConfigServer(int x) : WiFiServer(x) { }
 };
 
 #endif

@@ -41,23 +41,22 @@ long utcOffsetInSeconds = -8*60*60;
 unsigned long currentMillis = 0;
 unsigned long networkMillis = 0;
 unsigned long debugNetworkMillis = 0;
-byte feedingTimes[4] = {183,100,000,120};
-bool fedTimes[4] = {0,0,0,0};
+const byte feedingTimes[4] = {183,100,000,94};
+const bool fedTimes[4] = {0,0,0,0};
 byte networkTimeByte = 0;
 byte debugNetworkTimeByte = 0;
 byte currentTime = 0;
 
-//Instantiate objects from headers:
-Time myTime;
-Webserver myWebserver;
-
-WiFiServer server(80);
+//Instantiate objects:
+Time myTime(feedingTimes, fedTimes);
+ConfigServer server(80);  //argument represents the port
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 void setup(){
     Serial.begin(9600);
     //currentMillis = millis();
+    Serial.println(" ");
     Serial.print("Connecting to ");
     Serial.println(ssid);
     WiFi.begin(ssid, password);
@@ -77,7 +76,7 @@ void setup(){
     networkTimeByte = myTime.getCurrentNetworkTimeByte(&networkMillis, &timeClient);
     Serial.println(networkMillis);
     Serial.println(networkTimeByte);
-    myTime.prepFeedingTimes(networkTimeByte, feedingTimes, fedTimes);
+    myTime.prepFeedingTimes(networkTimeByte);
     //myTime.debugFunction(feedingTimes);
 }
 
@@ -95,20 +94,19 @@ void loop(){
 
     //Serial.print("Current estimated time from millis() is: ");
     //Serial.println((currentTime));
-
+    currentTime = myTime.improvedGetTimeByte(&networkMillis, &timeClient, networkTimeByte);
     Serial.print("Current ideal case time is: ");
-    Serial.println(myTime.improvedGetTimeByte(&networkMillis, &timeClient, networkTimeByte));
+    Serial.println(currentTime);
 
     //Serial.print("Next feeding time is: ");
 
-    if (myTime.itIsFeedingTime(currentTime, feedingTimes, fedTimes)){
+    if (myTime.itIsFeedingTime(currentTime)){
       Serial.println("Thus, it is feeding time!");
+      //motor.spinMotor();
     }
     else Serial.println("Thus, it is not feeding time.");
 
-    //myWebserver.handleClients(&server);
+    server.handleClients();
 
-    
-
-    delay(1000);
+    delay(5000);
 }
