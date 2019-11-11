@@ -61,7 +61,7 @@ byte Time::improvedGetTimeByte(unsigned long* networkMillis, NTPClient* timeClie
   }
 }
 
-void Time::prepFeedingTimes(byte currentTime, byte (&feedingTimes)[4], bool (&fedTimes)[4]){
+void Time::prepFeedingTimes(byte currentTime){
     
     DataManip datamanip;
     datamanip.bubbleSort(feedingTimes, 4);
@@ -76,12 +76,6 @@ void Time::prepFeedingTimes(byte currentTime, byte (&feedingTimes)[4], bool (&fe
     
 }
 
-void DataManip::swap (byte *a, byte *b)  {
-  byte temp = *a;
-  *a = *b;
-  *b = temp;
-}
-
 void DataManip::bubbleSort (byte arr[], int n) {
   int i, j;
   for (i = 0; i < n - 1; i++)
@@ -90,15 +84,16 @@ void DataManip::bubbleSort (byte arr[], int n) {
         swap (&arr[j], &arr[j + 1]);
 }
 
-bool Time::itIsFeedingTime(byte currentTime, byte feedingTimes[4], bool fedTimes[4]){
-  byte index = 5;
+bool Time::itIsFeedingTime(byte currentTime)
+{
+  index = 5;
   for (byte i = 0; i<4; i++){
     if(!(fedTimes[i])&&(feedingTimes[i])){
       index = i;
       break;
-      
     }
   }
+  
   Serial.print("Next feeding time is: ");
   Serial.println(feedingTimes[index]);
   if (index<4 && feedingTimes[index] <= currentTime){

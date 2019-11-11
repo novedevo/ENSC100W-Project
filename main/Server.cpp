@@ -4,8 +4,8 @@
 #include "Server.h"
 #include "Additional.h"
 
-void Webserver :: handleClients(WiFiServer* server){
-  WiFiClient client = server->available();   //Listen for incoming clients
+void ConfigServer :: handleClients(){
+  WiFiClient client = available();   //Listen for incoming clients
   if (client) {                             // If a new client connects,
     Serial.println("New Client.");          // print a message out in the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
