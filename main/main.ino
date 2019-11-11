@@ -3,13 +3,14 @@
 //#include "deal-with-time.cpp"
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <BlynkSimpleEsp8266.h>
 #include "Additional.h"
 #include "Server.h"
 //#include<algorithm>
 #include <ESP8266WiFi.h>
 using namespace std;
 
-//      example times 
+//        example times 
 /*        1:00am    =>  010
           4:30am    =>  043
           12:00pm   =>  120
@@ -36,9 +37,11 @@ using namespace std;
 //declaring constants and variables
 const char *ssid     = "***REMOVED***";
 const char *password = "***REMOVED***";
+const char *auth = "***REMOVED***";
 
 long utcOffsetInSeconds = -8*60*60;
 unsigned long currentMillis = 0;
+unsigned long oldMillis = 0;
 unsigned long networkMillis = 0;
 unsigned long debugNetworkMillis = 0;
 const byte feedingTimes[4] = {183,100,000,94};
@@ -54,13 +57,13 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 void setup(){
+    currentMillis = millis();
     Serial.begin(9600);
-    //currentMillis = millis();
     Serial.println(" ");
     Serial.print("Connecting to ");
     Serial.println(ssid);
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
+    Blynk.begin(auth, ssid, password);
+    /*while (Blynk.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
     }
@@ -68,7 +71,7 @@ void setup(){
     Serial.println("");
     Serial.println("WiFi connected.");
     Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(WiFi.localIP());*/
     server.begin();
     
     timeClient.begin();
@@ -94,19 +97,23 @@ void loop(){
 
     //Serial.print("Current estimated time from millis() is: ");
     //Serial.println((currentTime));
-    currentTime = myTime.improvedGetTimeByte(&networkMillis, &timeClient, networkTimeByte);
-    Serial.print("Current ideal case time is: ");
-    Serial.println(currentTime);
-
-    //Serial.print("Next feeding time is: ");
-
-    if (myTime.itIsFeedingTime(currentTime)){
-      Serial.println("Thus, it is feeding time!");
-      //motor.spinMotor();
+    currentMillis = millis();
+    if (currentMillis-oldMillis>=10000){
+      oldMillis = currentMillis;
+      currentTime = myTime.improvedGetTimeByte(&networkMillis, &timeClient, networkTimeByte);
+      Serial.print("Current ideal case time is: ");
+      Serial.println(currentTime);
+  
+      //Serial.print("Next feeding time is: ");
+  
+      if (myTime.itIsFeedingTime(currentTime)){
+        Serial.println("Thus, it is feeding time!");
+        //motor.spinMotor();
+        
+      }
+      else Serial.println("Thus, it is not feeding time.");
     }
-    else Serial.println("Thus, it is not feeding time.");
-
     server.handleClients();
 
-    delay(5000);
+    delay(500);
 }
