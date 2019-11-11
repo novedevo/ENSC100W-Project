@@ -9,66 +9,47 @@
 #include <ESP8266WiFi.h>
 using namespace std;
 
-//*     example times 
-/*      12:00am   =>  000
-        1:00am    =>  010
-        4:30am    =>  043
-        12:00pm   =>  120
-        8:20pm    =>  202
-        1550 hrs  =>  155
-        00:00     =>  000
-        5:42am    =>  054
-        5:49am    =>  054
+//      example times 
+/*        1:00am    =>  010
+          4:30am    =>  043
+          12:00pm   =>  120
+          8:20pm    =>  202
+          1550 hrs  =>  155
+          00:00     =>  000
+          5:42am    =>  054
+          5:49am    =>  054
 
         Invalid Times:
-        Anything where the first two digits aren't between 0 and 23 inclusive,
-        or the last digit isn't between 0 and 5 inclusive.
-
-        (0 <first two digits <= 23) && 
-
-        for example:
-        240
-        239
-        006
+          Anything where the first two digits aren't between 0 and 23 inclusive,
+          or the last digit isn't between 0 and 5 inclusive.
+  
+          000 is an invalid time, as it is the default value of our array. 
+          Feed your cat at 23:50 or 00:10.
+  
+          for example:
+          240
+          239
+          006
 
 */
 
 //declaring constants and variables
-const char *ssid     = "Aesthetics_Guest";
-const char *password = "TB_Guest";
+const char *ssid     = "Pixel_7859";
+const char *password = "redwood13";
 
 long utcOffsetInSeconds = -8*60*60;
 unsigned long currentMillis = 0;
 unsigned long networkMillis = 0;
 unsigned long debugNetworkMillis = 0;
-unsigned long millisAt000 = 0;
-byte feedingTimes[4] = {000,100,230,120};
-bool timesFed[4] = {0,0,0,0};
+byte feedingTimes[4] = {183,100,000,120};
+bool fedTimes[4] = {0,0,0,0};
 byte networkTimeByte = 0;
 byte debugNetworkTimeByte = 0;
 byte currentTime = 0;
 
-//store HTTP request
-String header;
-
-// Auxiliar variables to store the current output state
-String output5State = "off";
-String output4State = "off";
-
-// Assign output variables to GPIO pins
-const int output5 = 5;
-const int output4 = 4;
-
 //Instantiate objects from headers:
 Time myTime;
 Webserver myWebserver;
-
-// Current time
-unsigned long currentMillisTime = millis();
-// Previous time
-unsigned long previousTime = 0; 
-// Define timeout time in milliseconds (example: 2000ms = 2s)
-const long timeoutTime = 2000;
 
 WiFiServer server(80);
 WiFiUDP ntpUDP;
@@ -93,25 +74,41 @@ void setup(){
     
     timeClient.begin();
     
-    networkTimeByte = myTime.getCurrentNetworkTimeByte(&networkMillis, timeClient);
+    networkTimeByte = myTime.getCurrentNetworkTimeByte(&networkMillis, &timeClient);
     Serial.println(networkMillis);
     Serial.println(networkTimeByte);
+    myTime.prepFeedingTimes(networkTimeByte, feedingTimes, fedTimes);
+    //myTime.debugFunction(feedingTimes);
 }
 
 void loop(){
-    ////bubbleSort(feedingTimes, sizeof(feedingTimes)/sizeof(feedingTimes[0]));
-    Serial.println(millis());
-    Serial.print("Current time from network is: ");
-    debugNetworkTimeByte = myTime.getCurrentNetworkTimeByte(&debugNetworkMillis, timeClient);
-    Serial.println((debugNetworkTimeByte));
+    //Serial.println(millis());
+    //Serial.print("Current time from network is: ");
+    //debugNetworkTimeByte = myTime.getCurrentNetworkTimeByte(&debugNetworkMillis, &timeClient);
+    //if (debugNetworkTimeByte >=240){
+    //  Serial.println("network time failed");
+    //}
+    //else Serial.println((debugNetworkTimeByte));
     //TODO: FIXME: for some reason it starts to overflow (???) after a while of being on and begins to break? resetting fixes it? memory leak? tftftf?
     
-    currentTime = myTime.millisToTimeByte(millis() - myTime.millisAtMidnight(networkMillis, networkTimeByte));
+    //currentTime = myTime.millisToTimeByte(millis() - myTime.millisAtMidnight(networkMillis, networkTimeByte));
 
-    Serial.print("Current estimated time from millis() is: ");
-    Serial.println((currentTime));
+    //Serial.print("Current estimated time from millis() is: ");
+    //Serial.println((currentTime));
 
-    myWebserver.handleClients(&server);
+    Serial.print("Current ideal case time is: ");
+    Serial.println(myTime.improvedGetTimeByte(&networkMillis, &timeClient, networkTimeByte));
+
+    //Serial.print("Next feeding time is: ");
+
+    if (myTime.itIsFeedingTime(currentTime, feedingTimes, fedTimes)){
+      Serial.println("Thus, it is feeding time!");
+    }
+    else Serial.println("Thus, it is not feeding time.");
+
+    //myWebserver.handleClients(&server);
+
+    
 
     delay(1000);
 }
