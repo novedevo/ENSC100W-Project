@@ -40,6 +40,7 @@ const char *password = "redwood13";
 const char *auth = "2tO0Cw7-eFdDYImgMxbUImfkYbV4-7t5";
 
 long utcOffsetInSeconds = -8*60*60;
+int numOfTurns = 1;
 unsigned long currentMillis = 0;
 unsigned long millisOnLastTimeCheck = 0;
 unsigned long millisOnLastBlynkFeeding = 0;
@@ -80,7 +81,9 @@ BLYNK_WRITE(V1){
   myTime.printFeedingTimes();
 }
 
-
+BLYNK_WRITE(V2){
+  numOfTurns = param.asInt();
+}
 
 void setup(){
     currentMillis = millis();
