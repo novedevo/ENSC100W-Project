@@ -23,6 +23,8 @@ public:
     //this->fedTimes = fedTimes;
   }
 
+  void setFeedingTimes(String timesAsString);
+
   //takes standard format time of day as byte
   //returns time of day in milliseconds since 00:00
   unsigned long timeByteToMillis(byte timeByte);
@@ -43,6 +45,12 @@ public:
   bool itIsFeedingTime(byte currentTime);
 
   void prepFeedingTimes(byte currentTime);
+
+  void printFeedingTimes();
+
+  void sortFeedingTimes();
+
+  void resetFedTimes();
 };
 
 class DataManip{

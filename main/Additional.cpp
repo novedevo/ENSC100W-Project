@@ -13,6 +13,40 @@ unsigned long Time::timeByteToMillis(byte timeByte){
     return timeInMillis;
 }
 
+void Time::setFeedingTimes(String timesAsString){
+      //String pinValue = param.asStr();
+      //char *str = new char[pinValue.length() + 1];
+      const char *str = timesAsString.c_str();
+      //Serial.println(str);  
+      char* p = strtok((char*)str, ",");
+      
+      for(int i = 0; i<4; i++){
+        feedingTimes[i] = 0;
+        fedTimes[i] = 0;
+      }
+      int index = 0;
+    
+      while (p != nullptr && index < 4) {
+        feedingTimes[index++] = atoi(p);
+        p = strtok(NULL, ",");
+      }
+  }
+
+void Time::sortFeedingTimes(){
+    int i, j;
+    for (i = 0; i < 4 - 1; i++)
+      for (j = 0; j < 4 - i - 1; j++)
+        if (feedingTimes[j] > feedingTimes[j + 1])
+          std::swap (feedingTimes[j], feedingTimes[j + 1]);
+          std::swap (fedTimes[j], fedTimes[j + 1]);
+}
+
+void Time::printFeedingTimes(){
+  for (int i = 0; i < 4; i++){
+    Serial.println(feedingTimes[i]);
+  }
+}
+
 byte Time::millisToTimeByte(unsigned long timeInMillis) {
   int hours = timeInMillis / 1000 / 60 / 60;
   int minutes = (timeInMillis / 1000 / 60 ) - hours * 60;
@@ -40,7 +74,6 @@ byte Time::getCurrentNetworkTimeByte(unsigned long* networkMillis, NTPClient* ti
       return (byte)250;
     }
     else return timeByte;
-
 }
 
 unsigned long Time::millisAtMidnight(unsigned long networkMillis, unsigned char networkTimeByte) {
@@ -54,6 +87,7 @@ byte Time::getEstimatedTime(unsigned long networkMillis, byte networkTimeByte){
 
 byte Time::improvedGetTimeByte(unsigned long* networkMillis, NTPClient* timeClient, byte networkTimeByte){
   if (WiFi.status() != WL_CONNECTED){
+    Serial.println("No WiFi connection, falling back to millis()");
     return getEstimatedTime(*networkMillis, networkTimeByte);
   }
   else{
@@ -61,17 +95,25 @@ byte Time::improvedGetTimeByte(unsigned long* networkMillis, NTPClient* timeClie
   }
 }
 
+void Time::resetFedTimes(){
+  for (int i = 0; i<4; i++){
+    fedTimes[i] = false;
+  }
+}
+
 void Time::prepFeedingTimes(byte currentTime){
     
-    DataManip datamanip;
-    datamanip.bubbleSort(feedingTimes, 4);
+    sortFeedingTimes();
     for (int i = 0; i<4; i++){
       if (feedingTimes[i]<currentTime){
         fedTimes[i] = true;
         Serial.print(feedingTimes[i]);
         Serial.println(" is earlier than current time, thus pet has been fed");
       }
-      else continue;
+      else {
+        //int index = 5;
+        break;
+      }
     }
     
 }
@@ -92,13 +134,18 @@ bool Time::itIsFeedingTime(byte currentTime)
       break;
     }
   }
-  
+  if (index>4){
+    Serial.println("No feeding times until tomorrow.");
+    return false;
+  }
   Serial.print("Next feeding time is: ");
   Serial.println(feedingTimes[index]);
-  if (index<4 && feedingTimes[index] <= currentTime){
+  if (feedingTimes[index] <= currentTime){
     fedTimes[index] = true;
     return true;
   }
-  else return false;
+  else {
+    return false;
+  }
   
   }
