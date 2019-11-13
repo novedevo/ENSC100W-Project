@@ -1,13 +1,13 @@
-//#include <iostream>
-//#include "included.cpp"
-//#include "deal-with-time.cpp"
-#include <NTPClient.h>
-#include <WiFiUdp.h>
-#include <BlynkSimpleEsp8266.h>
-#include "Additional.h"
-#include "Server.h"
-//#include<algorithm>
-#include <ESP8266WiFi.h>
+#include <NTPClient.h>  //for network time
+#include <WiFiUdp.h>    //for udp of network time
+#include "BlinkityBlink.h"
+#include <TimeLib.h>
+#include <BlynkSimpleEsp8266.h>   //for blynk control over wifi
+#include <WidgetRTC.h>    //for blynk real time clock
+#include "Additional.h"   //Additional code, mainly Time class
+#include "Server.h"       //additional code to run webserver
+#include <ESP8266WiFi.h>  //basic functionality
+
 using namespace std;
 
 //        example times 
@@ -37,7 +37,10 @@ using namespace std;
 //declaring constants and variables
 const char *ssid     = "***REMOVED***";
 const char *password = "***REMOVED***";
-const char *auth = "***REMOVED***";
+const char *auth = "***REMOVED***";  //auth key for Blynk
+
+const byte feedingTimes[4] = {183,100,000,94};
+const bool fedTimes[4] = {0,0,0,0};
 
 long utcOffsetInSeconds = -8*60*60;
 int numOfTurns = 1;
@@ -46,11 +49,11 @@ unsigned long millisOnLastTimeCheck = 0;
 unsigned long millisOnLastBlynkFeeding = 0;
 unsigned long networkMillis = 0;
 unsigned long debugNetworkMillis = 0;
-const byte feedingTimes[4] = {183,100,000,94};
-const bool fedTimes[4] = {0,0,0,0};
 byte networkTimeByte = 0;
 byte debugNetworkTimeByte = 0;
 byte currentTime = 0;
+byte fallbackTime = 0;
+byte idealCaseTime = 0;
 
 //Instantiate objects:
 Time myTime(feedingTimes, fedTimes);
@@ -58,6 +61,12 @@ Time myTime(feedingTimes, fedTimes);
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
+//BlynkTimer timer;
+WidgetRTC rtc;
+
+BlinkityBlink wink;
+
+//To be called when Blynk app sends "Feed Now"
 BLYNK_WRITE(V0)
 {
   currentMillis = millis();
@@ -67,13 +76,14 @@ BLYNK_WRITE(V0)
       millisOnLastBlynkFeeding = currentMillis;
         Serial.println("Remote connection from Blynk App ordered pet fed:");
         Serial.println("Running extra feeding cycle..");
-    }else{
+    } else {
       Serial.println("Too little time has elapsed since last feeding.");
       Serial.println("Taking no action.");
     }
   }
 }
 
+//To be called when Blynk App sends feeding times
 BLYNK_WRITE(V1){
   myTime.setFeedingTimes(param.asStr());
   myTime.sortFeedingTimes();
@@ -81,69 +91,89 @@ BLYNK_WRITE(V1){
   myTime.printFeedingTimes();
 }
 
+//To be called when Blynk App sends a number of turns
 BLYNK_WRITE(V2){
   numOfTurns = param.asInt();
 }
 
+//Run once when the board is reset
 void setup(){
+    
+    //Update currentMillis (redundant)
     currentMillis = millis();
     
     Serial.begin(9600);
     
-    Serial.println(" ");
+    Serial.println(" ");  //because of garbage data written to serial when board is reset
     Serial.print("Connecting to ");
     Serial.println(ssid);
     
     Blynk.begin(auth, ssid, password);
-    //server.begin();
     
-    timeClient.begin();
+    //begin synchronizing time
+    wink.begin();
+
+    currentTime = wink.blynkTimeAsByte();
+
+    //server.begin(); //uncomment if webserver functionality is needed
+    /*
+    timeClient.begin();   //TODO: understand why I needed a networkTimeByte
+                          //Don't comment these out or it won't work
     networkTimeByte = myTime.getCurrentNetworkTimeByte(&networkMillis, &timeClient);
     currentTime = networkTimeByte;
-    
-    //Serial.println(networkMillis);
-    //Serial.println(networkTimeByte);
-    myTime.prepFeedingTimes(networkTimeByte);
-    //myTime.debugFunction(feedingTimes);
+    */
+    ////Serial.println(networkMillis);
+    ////Serial.println(networkTimeByte);
+
+    myTime.prepFeedingTimes(currentTime);
+    ////myTime.debugFunction(feedingTimes);
 }
 
 void loop(){
-    //Serial.println(millis());
-    //Serial.print("Current time from network is: ");
-    //debugNetworkTimeByte = myTime.getCurrentNetworkTimeByte(&debugNetworkMillis, &timeClient);
-    //if (debugNetworkTimeByte >=240){
-    //  Serial.println("network time failed");
-    //}
-    //else Serial.println((debugNetworkTimeByte));
-    //TODO: FIXME: for some reason it starts to overflow (???) after a while of being on and begins to break? resetting fixes it? memory leak? tftftf?
-    
-    //currentTime = myTime.millisToTimeByte(millis() - myTime.millisAtMidnight(networkMillis, networkTimeByte));
-
-    //Serial.print("Current estimated time from millis() is: ");
-    //Serial.println((currentTime));
     
     Blynk.run();
-    
+    Blynk.virtualWrite(V1, myTime.getFeedingTimes());
     currentMillis = millis();
     if (currentMillis-millisOnLastTimeCheck>=10000){
+      //TODO: why why why is any of this necessary? 
+      //TODO: Can I just use blynk? will that not work or be too much?
       millisOnLastTimeCheck = currentMillis;
-      currentTime = myTime.improvedGetTimeByte(&networkMillis, &timeClient, networkTimeByte);
-      Serial.print("Current ideal case time is: ");
+      //currentTime = myTime.improvedGetTimeByte(&networkMillis, &timeClient, networkTimeByte);
+      
+      currentTime = wink.blynkTimeAsByte();
+      fallbackTime = wink.fallbackTimeAsByte();
+      idealCaseTime = wink.idealCaseTimeAsByte();
+      
+      Serial.print("Current Blynk time is: ");
       Serial.println(currentTime);
+
+      Serial.print("Fallback time is: ");
+      Serial.println(fallbackTime);
+
+      Serial.print("Ideal case time is: ");
+      Serial.println(idealCaseTime);
+
+      //Serial.print("Blynk claims time is: ");
+      //Serial.println(hour()*10+minute()/10);
   
       //Serial.print("Next feeding time is: ");
   
       if (myTime.itIsFeedingTime(currentTime)){
         Serial.println("Thus, it is feeding time!");
         //motor.spinMotor();
-        
+      } else {
+        Serial.println("Thus, it is not feeding time.");
       }
-      else Serial.println("Thus, it is not feeding time.");
+
     }
+
+    //To reset at midnight:
     if (currentTime == 0){
       myTime.resetFedTimes();
     }
-    //server.handleClients();
 
+    //server.handleClients(); //uncomment if webserver functionality is needed
+
+    //configurable delay to avoid overheating the arduino
     delay(500);
 }
