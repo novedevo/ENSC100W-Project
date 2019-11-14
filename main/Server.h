@@ -1,5 +1,3 @@
-//#include <NTPClient.h>
-//#include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 #include "Additional.h"
 

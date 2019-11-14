@@ -1,8 +1,4 @@
-//#include <NTPClient.h>
-//#include <WiFiUdp.h>
-#include <ESP8266WiFi.h>
 #include "Server.h"
-#include "Additional.h"
 
 void ConfigServer :: handleClients(){
   WiFiClient client = available();   //Listen for incoming clients
