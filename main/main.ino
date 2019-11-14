@@ -1,6 +1,7 @@
-//#include <NTPClient.h>  //for network time
-//#include <WiFiUdp.h>    //for udp of network time
-//#include "BlinkityBlink.h"
+#define BLYNK_TIMEOUT_MS  500  // must be BEFORE BlynkSimpleEsp8266.h doesn't work !!!
+#define BLYNK_HEARTBEAT   17   // must be BEFORE BlynkSimpleEsp8266.h works OK as 17s
+#define BLYNK_PRINT Serial    
+
 #include <TimeLib.h>
 #include <BlynkSimpleEsp8266.h>   //for blynk control over wifi
 #include <WidgetRTC.h>    //for blynk real time clock
@@ -8,7 +9,7 @@
 #include "Server.h"       //additional code to run webserver
 #include <ESP8266WiFi.h>  //basic functionality
 
-using namespace std;
+//using namespace std;
 
 //        example times 
 /*        1:00am    =>  010
@@ -39,25 +40,20 @@ const char *ssid     = "Aesthetics_Guest";
 const char *password = "TB_Guest";
 const char *auth = "***REMOVED***";  //auth key for Blynk
 
-const byte feedingTimes[4] = {183,100,000,94};
+const byte feedingTimes[4] = {70,120,190,0};
 const bool fedTimes[4] = {0,0,0,0};
 
-//long utcOffsetInSeconds = -8*60*60;
 int numOfTurns = 1;
 unsigned long currentMillis = 0;
 unsigned long millisOnLastTimeCheck = 0;
 unsigned long millisOnLastBlynkFeeding = 0;
-//unsigned long networkMillis = 0;
-//unsigned long debugNetworkMillis = 0;
-//byte networkTimeByte = 0;
-//byte debugNetworkTimeByte = 0;
 byte currentTime = 0;
 byte fallbackTime = 0;
 byte idealCaseTime = 0;
 bool firstRunOnly = true;
 
-//bool on = 0;
-//bool online = 0;
+bool on = 0;
+bool online = 0;
 
 
 
@@ -81,15 +77,12 @@ class BlinkityBlink : public WidgetRTC {
     
   public:
     byte blynkTimeAsByte();
-
-    byte fallbackTimeAsByte();
-
-    byte idealCaseTimeAsByte();
     
     explicit BlinkityBlink() : WidgetRTC() {}
-    void nightlyReset();
-    void updateBlynkFeedingTimes();
     
+    void nightlyReset();
+    
+    void updateBlynkFeedingTimes();
 };
 
 
@@ -103,17 +96,18 @@ class BlinkityBlink : public WidgetRTC {
 
 
 //Instantiate objects:
-Time myTime(feedingTimes, fedTimes);
-//ConfigServer server(80);  //argument represents the port
-//WiFiUDP ntpUDP;
-//NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
+//ConfigServer server(80);  //argument represents the port
+
+Time myTime(feedingTimes);
 BlynkTimer timer;
 //WidgetRTC rtc;
 BlinkityBlink wink;
 
 
 
+
+//###########################
 //Asynchronous Blynk Functions:
 
 //To be called when Blynk app sends "Feed Now"
@@ -146,70 +140,35 @@ BLYNK_WRITE(V2){
   numOfTurns = param.asInt();
 }
 
+//################################
 //End Asynchronous Blynk Functions
 
 
 
 //Run once when the board is reset
-void setup(){
-    
-    //Update currentMillis (redundant)
-    currentMillis = millis();
-    
+void setup(){  
     Serial.begin(9600);
     
     Serial.println(" ");  //because of garbage data written to serial when board is reset
     Serial.print("Connecting to ");
     Serial.println(ssid);
-    
-    Blynk.begin(auth, ssid, password);
-    //delay(1000);
-    //while(!Blynk.connect() && millis()<20000){delay(50);}
-    //Blynk.run();
-    //delay(1000);
-    //begin synchronizing time
+
+    CheckConnection();
     wink.begin();
-    //delay(1000);
-    //Serial.println(Blynk.connected());
-    //Serial.println(hour());
+    wink.updateBlynkFeedingTimes();
 
-    //for (int i = 0; i<10; i++){
-    //  Serial.println(wink.blynkTimeAsByte());
-    //}
-
-    //while(year()==1970){
-    //  Serial.println("Waiting to get time...");
-    //  delay(1000);
-    //}
-
-    //currentTime = wink.blynkTimeAsByte();
-
-    //Serial.println(" ");
+    timer.setInterval(60000L, CheckConnection);
+    timer.setInterval(10000L, CheckIfItIsTimeToFeedThePet);
+    timer.setInterval(60000L, UpdateBlynkFeedingTimes);
     
-    //server.begin(); //uncomment if webserver functionality is needed
-    /*
-    timeClient.begin();   //TODO: understand why I needed a networkTimeByte
-                          //Don't comment these out or it won't work
-    networkTimeByte = myTime.getCurrentNetworkTimeByte(&networkMillis, &timeClient);
-    currentTime = networkTimeByte;
-    */
-    ////Serial.println(networkMillis);
-    ////Serial.println(networkTimeByte);
-    //myTime.prepFeedingTimes(currentTime);
-    ////myTime.debugFunction(feedingTimes);
-    //Serial.println(year());
-
-    //timer.setInterval(5000L, CheckConnection);
 }
 
 void loop(){
-    //Serial.println(year());
-    //if(Blynk.connected()){
+    if(Blynk.connected()){
       Blynk.run();
-    //}
+    }
     
-    //timer.run();
-    //currentTime = wink.blynkTimeAsByte();
+    timer.run();
     
     if (firstRunOnly && year() != 1970){
       currentTime = wink.blynkTimeAsByte();
@@ -217,60 +176,38 @@ void loop(){
       firstRunOnly = false;
     }
     
-    //Serial.print("after blynk.run()... ");
-    //Serial.println(year());
-    //Serial.println(wink.blynkTimeAsByte());
-    wink.updateBlynkFeedingTimes();
-    
-    currentMillis = millis();
-    if (currentMillis-millisOnLastTimeCheck>=10000){
-      //TODO: why why why is any of this necessary? 
-      //TODO: Can I just use blynk? will that not work or be too much?
-      millisOnLastTimeCheck = currentMillis;
-      //currentTime = myTime.improvedGetTimeByte(&networkMillis, &timeClient, networkTimeByte);
-      
-      currentTime = wink.blynkTimeAsByte();
-      fallbackTime = wink.fallbackTimeAsByte();
-      idealCaseTime = wink.idealCaseTimeAsByte();
-      
-      Serial.print("Current Blynk time is: ");
-      Serial.println(currentTime);
-
-      Serial.print("Fallback time is: ");
-      Serial.println(fallbackTime);
-
-      Serial.print("Ideal case time is: ");
-      Serial.println(idealCaseTime);
-
-      //Serial.print("Blynk claims time is: ");
-      //Serial.println(hour()*10+minute()/10);
-  
-      //Serial.print("Next feeding time is: ");
-  
-      if (myTime.itIsFeedingTime(currentTime)){
-        Serial.println("Thus, it is feeding time!");
-        //motor.spinMotor();
-      } else {
-        Serial.println("Thus, it is not feeding time.");
-      }
-
-    }
-
     //To reset at midnight:
-    if (currentTime == 0){
+    if (hour() == 0){
       myTime.resetFedTimes();
     }
 
     //server.handleClients(); //uncomment if webserver functionality is needed
-
-    //configurable delay to avoid overheating the arduino
-    delay(500);
 }
 
+void CheckIfItIsTimeToFeedThePet(){
+  Serial.print("Current Blynk time is: ");
+  Serial.println(wink.blynkTimeAsByte());
+  
+  if (myTime.itIsFeedingTime(wink.blynkTimeAsByte())){
+    Serial.println("Thus, it is feeding time!");
+    //motor.spinMotor();
+  } else {
+    Serial.println("Thus, it is not feeding time.");
+  }
+}
 
+void CheckConnection(){    // check every 11s if connected to Blynk server
+  if(!Blynk.connected()){
+    Serial.println("Not connected to Blynk");
+    Blynk.begin(auth, ssid, password);
+  } else {
+    Serial.println("Connected to Blynk!");
+  }
+}
 
-
-
+void UpdateBlynkFeedingTimes(){
+  wink.updateBlynkFeedingTimes();
+}
 
 //###################
 //BLINKITYBLINK_CPP IS DEFINED BELOW
@@ -284,22 +221,9 @@ void BlinkityBlink::updateTime(){
   currentTimeAsByte = hour()*10+minute()/10;
 }
 
-
 byte BlinkityBlink::blynkTimeAsByte(){
   updateTime();
   return currentTimeAsByte;
-}
-
-byte BlinkityBlink::fallbackTimeAsByte(){  //!#############
-  return 254; //TODO: IMPLEMENT
-}
-
-byte BlinkityBlink::idealCaseTimeAsByte(){           //!#################
-  if(Blynk.connected()){
-    return blynkTimeAsByte();
-  } else {
-    return fallbackTimeAsByte();
-  }
 }
 
 void BlinkityBlink::nightlyReset(){
@@ -309,8 +233,6 @@ void BlinkityBlink::nightlyReset(){
 void BlinkityBlink::updateBlynkFeedingTimes(){
   Blynk.virtualWrite(V1, myTime.getFeedingTimes());
 }
-
-
 
 //##########################
 //END BLINKITYBLINK_CPP

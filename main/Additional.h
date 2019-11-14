@@ -17,10 +17,10 @@ private:
 public:
 
   //constructor, takes two arrays and defines them
-  Time (const byte (&feedingTimes)[4], const bool (&fedTimes)[4]){
+  Time (const byte (&feedingTimes)[4]){
     for(int i = 0; i<4; i++){
       this->feedingTimes[i] = feedingTimes[i];
-      this->fedTimes[i] = fedTimes[i];
+      this->fedTimes[i] = 0;
     }
     
     //this->feedingTimes = feedingTimes;
@@ -32,30 +32,7 @@ public:
   void setFeedingTimes(String timesAsString);
 
   String getFeedingTimes();
-/*
-  //takes standard format time of day as byte
-  //returns time of day in milliseconds since 00:00
-  unsigned long timeByteToMillis(byte timeByte);
-  
-  //takes time of day in milliseconds since 00:00
-  //returns standard format time of day as a byte
-  byte millisToTimeByte(unsigned long timeInMillis);
-  
-  //returns time of day as byte from network
-  byte getCurrentNetworkTimeByte(unsigned long* networkMillis, NTPClient* timeClient);
-  
-  //returns what the millis would have said at midnight
-  //TODO: why does it work if it is unsigned, what if millis wasn't running at midnight?
-  unsigned long millisAtMidnight(unsigned long networkMillis, unsigned char networkTimeByte);  
 
-  //Returns time from network if it's connected to wifi, otherwise fallbacks to millis
-  //TODO: test this over a long period of time, figure out max variation, do tests!!
-  byte improvedGetTimeByte(unsigned long* networkMillis, 
-                           NTPClient* timeClient, byte networkTimeByte);
-
-  //returns time as calculated from millis
-  byte getEstimatedTime(unsigned long networkMillis, byte networkTimeByte);
-*/
   //checks if it is feeding time
   bool itIsFeedingTime(byte currentTime);
 

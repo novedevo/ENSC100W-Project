@@ -1,18 +1,4 @@
 #include "Additional.h"
-/*
-unsigned long Time::timeByteToMillis(byte timeByte){  //TODO: rewrite? understand?
-    int hours = timeByte / 10;
-    int minutes = (timeByte % 10) * 10;
-  
-    if (hours >= 24 || minutes >= 60) {   //impossible times in standard 24-hours time
-      return 0;
-      //throw "invalidTimeByte";  //commented out because arduino doesn't like exceptions?
-      //uncomment if I figure out a way to get that working?
-    }
-  
-    unsigned long timeInMillis = (hours * 60 + minutes) * 60 * 1000;
-    return timeInMillis;
-}*/
 
 void Time::setFeedingTimes(String timesAsString){
       const char *str = timesAsString.c_str();  //must be const, otherwise incorrect conversion
@@ -58,71 +44,7 @@ void Time::printFeedingTimes(){
     Serial.println(feedingTimes[i]);
   }
 }
-/*
-byte Time::millisToTimeByte(unsigned long timeInMillis) { //TODO: rewrite? understand?
-  int hours = timeInMillis / 1000 / 60 / 60;
-  int minutes = (timeInMillis / 1000 / 60 ) - hours * 60;
 
-  if (minutes>=60){
-    return 0;
-    //throw "invalidMillisTime"
-  }
-  
-  if (hours >= 24) {   //impossible times in standard 24-hours time
-    hours = hours%24;
-    //throw "invalidMillisTime";  //arduino doesn't like exceptions
-  }
-  
-  byte timeByte = hours * 10 + minutes / 10;
-  return timeByte;
-}
-
-//TODO: rewrite? understand?
-byte Time::getCurrentNetworkTimeByte(unsigned long* networkMillis, NTPClient* timeClient) {
-    Serial.println("Time Client updating");
-    timeClient->update();   //who knows why this is necessary, oh well
-    Serial.println("Time client updated");
-    *networkMillis = millis();  //updates the last time that the network was used
-
-    Serial.println("Getting time...");
-    int hours = timeClient->getHours();
-    int minutes = timeClient->getMinutes();
-    Serial.println("Got times.");
-
-    byte timeByte = hours * 10 + minutes / 10;
-
-    if (hours >= 24 || minutes >= 60){
-      Serial.println("Got Invalid Time");
-      Serial.println(timeByte);
-      return (byte)250;
-    }
-    else return timeByte;
-}
-
-//TODO: understand? rewrite? obviate?
-//TODO: unsigned? why does that even work
-//why does vscode say unsigned is defined as signed tftftf
-unsigned long Time::millisAtMidnight(unsigned long networkMillis, unsigned char networkTimeByte) {
-  unsigned long millisAtMidnight = networkMillis - timeByteToMillis(networkTimeByte);
-  return millisAtMidnight;
-}
-
-//TODO: bring networkmillis, networkTimeByte into Time or remove them altogether
-byte Time::getEstimatedTime(unsigned long networkMillis, byte networkTimeByte){
-  return millisToTimeByte(millis() - millisAtMidnight(networkMillis, networkTimeByte));
-}
-
-//TODO: fix why why why
-byte Time::improvedGetTimeByte(unsigned long* networkMillis, NTPClient* timeClient, byte networkTimeByte){
-  if (WiFi.status() != WL_CONNECTED){
-    Serial.println("No WiFi connection, falling back to millis()");
-    return getEstimatedTime(*networkMillis, networkTimeByte);
-  }
-  else{
-    return getCurrentNetworkTimeByte(networkMillis, timeClient);
-  }
-}
-*/
 void Time::resetFedTimes(){
   for (int i = 0; i<4; i++){
     fedTimes[i] = false;
@@ -130,9 +52,9 @@ void Time::resetFedTimes(){
 }
 
 void Time::prepFeedingTimes(byte currentTime){
-  Serial.println(currentTime);
+  //Serial.println(currentTime);
   sortFeedingTimes();
-  printFeedingTimes();
+  //printFeedingTimes();
   for (int i = 0; i<4; i++){
     //Serial.println(i);
     if (feedingTimes[i]<currentTime){   //if we have already passed this feeding time
