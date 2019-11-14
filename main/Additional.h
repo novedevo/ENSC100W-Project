@@ -6,34 +6,35 @@
 #ifndef ADDITIONAL_H
 #define ADDITIONAL_H
 
-class Time{
+class Time{    //TODO: change class name, change filename?
 
 private:
   //for internal use only
-  byte index = 5;
-  byte feedingTimes[4];
-  bool fedTimes[4];
+  byte index = 5;    //TODO: remove? //? why is this needed
+                      //? perhaps use this to keep track of current feeding time without second array?
+  byte feedingTimes[4];  //TODO: instantiate with default values in CPP file?
+  bool fedTimes[4]; 
 
 public:
 
-  //constructor, takes two arrays and defines them
+  //constructor, takes an array and populates feedingTimes with it
   Time (const byte (&feedingTimes)[4]){
-    for(int i = 0; i<4; i++){
+    for(int i = 0; i<4; i++){ //* cannot assign arrays to one another directly, must use loop
       this->feedingTimes[i] = feedingTimes[i];
       this->fedTimes[i] = 0;
     }
-    
-    //this->feedingTimes = feedingTimes;
-    //this->fedTimes = fedTimes;
   }
 
   //Takes comma-deliminated list of exactly four times
   //Standard time formatting
+  //TODO: handle less than 3 times gracefully?
   void setFeedingTimes(String timesAsString);
 
+  //reverses above function
   String getFeedingTimes();
 
-  //checks if it is feeding time
+  //checks if it is feeding time,
+  //moves on to next feeding time if so
   bool itIsFeedingTime(byte currentTime);
 
   //sorts, sets any times earlier than the current time
