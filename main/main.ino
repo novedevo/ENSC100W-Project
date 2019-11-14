@@ -1,9 +1,9 @@
-#include <NTPClient.h>  //for network time
-#include <WiFiUdp.h>    //for udp of network time
+//#include <NTPClient.h>  //for network time
+//#include <WiFiUdp.h>    //for udp of network time
 #include "BlinkityBlink.h"
-#include <TimeLib.h>
-#include <BlynkSimpleEsp8266.h>   //for blynk control over wifi
-#include <WidgetRTC.h>    //for blynk real time clock
+//#include <TimeLib.h>
+//#include <BlynkSimpleEsp8266.h>   //for blynk control over wifi
+//#include <WidgetRTC.h>    //for blynk real time clock
 #include "Additional.h"   //Additional code, mainly Time class
 #include "Server.h"       //additional code to run webserver
 #include <ESP8266WiFi.h>  //basic functionality
@@ -42,15 +42,15 @@ const char *auth = "***REMOVED***";  //auth key for Blynk
 const byte feedingTimes[4] = {183,100,000,94};
 const bool fedTimes[4] = {0,0,0,0};
 
-long utcOffsetInSeconds = -8*60*60;
+//long utcOffsetInSeconds = -8*60*60;
 int numOfTurns = 1;
 unsigned long currentMillis = 0;
 unsigned long millisOnLastTimeCheck = 0;
 unsigned long millisOnLastBlynkFeeding = 0;
-unsigned long networkMillis = 0;
-unsigned long debugNetworkMillis = 0;
-byte networkTimeByte = 0;
-byte debugNetworkTimeByte = 0;
+//unsigned long networkMillis = 0;
+//unsigned long debugNetworkMillis = 0;
+//byte networkTimeByte = 0;
+//byte debugNetworkTimeByte = 0;
 byte currentTime = 0;
 byte fallbackTime = 0;
 byte idealCaseTime = 0;
@@ -58,8 +58,8 @@ byte idealCaseTime = 0;
 //Instantiate objects:
 Time myTime(feedingTimes, fedTimes);
 //ConfigServer server(80);  //argument represents the port
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+//WiFiUDP ntpUDP;
+//NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 //BlynkTimer timer;
 WidgetRTC rtc;
