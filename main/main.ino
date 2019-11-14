@@ -12,7 +12,7 @@
 //TODO: Implement persistant timestamp capabilities?
 //use blynk?
 
-//        example times 
+//*       example times 
 /*        1:00am    =>  010
           4:30am    =>  043
           12:00pm   =>  120
@@ -22,7 +22,7 @@
           5:42am    =>  054
           5:49am    =>  054
 
-        Invalid Times:
+*       Invalid Times:
           Anything where the first two digits aren't between 0 and 23 inclusive,
           or the last digit isn't between 0 and 5 inclusive.
   
@@ -41,20 +41,21 @@ const char *ssid     = "Aesthetics_Guest";
 const char *password = "TB_Guest";
 const char *auth = "2tO0Cw7-eFdDYImgMxbUImfkYbV4-7t5";  //auth key for Blynk
 
-const byte feedingTimes[4] = {70,120,190,0};
-const bool fedTimes[4] = {0,0,0,0};
+const byte feedingTimes[4] = {70,120,190,0};  //default initialization
+const bool fedTimes[4] = {0,0,0,0};   //TODO: remove?
 
-int numOfTurns = 1;
-unsigned long currentMillis = 0;
-unsigned long millisOnLastTimeCheck = 0;
-unsigned long millisOnLastBlynkFeeding = 0;
+int numOfTurns = 1;   //number of turns the motor, and thus auger, will make
+                      //equivalent to changing portion size
+unsigned long currentMillis = 0;    //TODO: remove? replace with millis() calls?
+unsigned long millisOnLastTimeCheck = 0;    //TODO: remove?
+unsigned long millisOnLastBlynkFeeding = 0;    
 byte currentTime = 0;
-byte fallbackTime = 0;
-byte idealCaseTime = 0;
+byte fallbackTime = 0;    //TODO: remove?
+byte idealCaseTime = 0;    //TODO: remove?
 bool firstRunOnly = true;
 
-bool on = 0;
-bool online = 0;
+bool on = 0;    //TODO: remove?
+bool online = 0;    //TODO: remove?
 
 
 
@@ -79,11 +80,11 @@ class BlinkityBlink : public WidgetRTC {
   public:
     byte blynkTimeAsByte();
     
-    explicit BlinkityBlink() : WidgetRTC() {}
+    explicit BlinkityBlink() : WidgetRTC() {} //to inherit constructor
     
     void nightlyReset();
     
-    void updateBlynkFeedingTimes();
+    void updateBlynkFeedingTimes();   //sends data to blynkapp
 };
 
 
@@ -100,26 +101,26 @@ class BlinkityBlink : public WidgetRTC {
 
 //ConfigServer server(80);  //argument represents the port
 
-Time myTime(feedingTimes);
+Time myTime(feedingTimes);    //TODO: give Time class default initializations?
 BlynkTimer timer;
-//WidgetRTC rtc;
-BlinkityBlink wink;
+//WidgetRTC rtc;      //TODO: remove?
+BlinkityBlink wink;   //* inherits from WidgetRTC
 
 
 
 
-//###########################
-//Asynchronous Blynk Functions:
+//*###########################
+//*Asynchronous Blynk Functions:
 
 //To be called when Blynk app sends "Feed Now"
 BLYNK_WRITE(V0)
 {
   currentMillis = millis();
   if (param.asInt()){
-    if (currentMillis-millisOnLastBlynkFeeding >= 10000){
-      //motor.spinMotor();
+    if (currentMillis-millisOnLastBlynkFeeding >= 10000){ //if it's been more than 10 seconds since last request
+      //motor.spinMotor();    //TODO: uncomment when motor functionality is merged.
       millisOnLastBlynkFeeding = currentMillis;
-        if(param.asInt() == 10) {
+        if (param.asInt() == 10) {
           Serial.println("Remote connection from Blynk App ordered pet fed:");
         } else {
           Serial.println("Remote connection from Google Assistant ordered pet fed:");
@@ -136,7 +137,7 @@ BLYNK_WRITE(V0)
 BLYNK_WRITE(V1){
   myTime.setFeedingTimes(param.asStr());
   myTime.sortFeedingTimes();
-  myTime.prepFeedingTimes(currentTime);
+  myTime.prepFeedingTimes(currentTime); //TODO: implement fron wink class?
   myTime.printFeedingTimes();
 }
 
@@ -146,13 +147,17 @@ BLYNK_WRITE(V2){
   Serial.println(numOfTurns);
 }
 
+//Legacy code from early IFTTT testing
+//Was called when google assistant made a request
+//now deprecated in favour of different parametres for V0
+//TODO: remove?
 BLYNK_WRITE(V3){
   if (param.asInt()){
     Serial.print("true");
   } else {Serial.print("false");}
 }
 
-//################################
+//*################################
 //End Asynchronous Blynk Functions
 
 
@@ -165,10 +170,13 @@ void setup(){
     Serial.print("Connecting to ");
     Serial.println(ssid);
 
-    CheckConnection();
-    wink.begin();
-    wink.updateBlynkFeedingTimes();
+    CheckConnection();    //also initiates connection to wifi and blynkapp
+    wink.begin();         //begin tracking time
+    wink.updateBlynkFeedingTimes();   //send feeding times to blynkApp
 
+
+    //Setup timer events
+    //Values are given in milliseconds
     timer.setInterval(60000L, CheckConnection);
     timer.setInterval(10000L, CheckIfItIsTimeToFeedThePet);
     timer.setInterval(60000L, UpdateBlynkFeedingTimes);
@@ -176,8 +184,9 @@ void setup(){
 }
 
 void loop(){
+
     if(Blynk.connected()){
-      Blynk.run();
+      Blynk.run();      //magic blynk code, honestly
     }
     
     timer.run();
@@ -186,7 +195,7 @@ void loop(){
       currentTime = wink.blynkTimeAsByte();
       myTime.prepFeedingTimes(currentTime);
       firstRunOnly = false;
-    }
+    }   //for some reason this didn't work in setup() so it is here
     
     //To reset at midnight:
     if (hour() == 0){
@@ -208,7 +217,8 @@ void CheckIfItIsTimeToFeedThePet(){
   }
 }
 
-void CheckConnection(){    // check every 11s if connected to Blynk server
+void CheckConnection(){   // check if connected to Blynk server
+                          //! //TODO: Test if this actually works
   if(!Blynk.connected()){
     Serial.println("Not connected to Blynk");
     Blynk.begin(auth, ssid, password);
@@ -217,11 +227,14 @@ void CheckConnection(){    // check every 11s if connected to Blynk server
   }
 }
 
-void UpdateBlynkFeedingTimes(){
+void UpdateBlynkFeedingTimes(){ //passthrough function because blynkTimer cannot
+                                //take member functions of classes for some reason
   wink.updateBlynkFeedingTimes();
 }
 
-//###################
+
+
+//*###################
 //BLINKITYBLINK_CPP IS DEFINED BELOW
 
 
@@ -246,5 +259,5 @@ void BlinkityBlink::updateBlynkFeedingTimes(){
   Blynk.virtualWrite(V1, myTime.getFeedingTimes());
 }
 
-//##########################
+//*##########################
 //END BLINKITYBLINK_CPP
