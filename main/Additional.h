@@ -1,5 +1,5 @@
-#include <NTPClient.h>
-#include <WiFiUdp.h>
+//#include <NTPClient.h>
+//#include <WiFiUdp.h>
 //#include<algorithm>
 #include <ESP8266WiFi.h>
 
@@ -32,7 +32,7 @@ public:
   void setFeedingTimes(String timesAsString);
 
   String getFeedingTimes();
-
+/*
   //takes standard format time of day as byte
   //returns time of day in milliseconds since 00:00
   unsigned long timeByteToMillis(byte timeByte);
@@ -55,7 +55,7 @@ public:
 
   //returns time as calculated from millis
   byte getEstimatedTime(unsigned long networkMillis, byte networkTimeByte);
-
+*/
   //checks if it is feeding time
   bool itIsFeedingTime(byte currentTime);
 

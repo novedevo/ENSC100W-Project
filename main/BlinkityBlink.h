@@ -1,4 +1,8 @@
-#include <TimeLib.h>
+//R.I.P. BlinkityBlink.h
+//We barely knew you
+//Leaving this here for compatibility, see main.ino for details and definition
+
+/*#include <TimeLib.h>
 #include <BlynkSimpleEsp8266.h>   //for blynk control over wifi
 #include <WidgetRTC.h>    //for blynk real time clock
 #include "Additional.h"   //Additional code, mainly Time class
@@ -29,4 +33,4 @@ class BlinkityBlink : public WidgetRTC {
     
 };
 
-#endif
+#endif*/
