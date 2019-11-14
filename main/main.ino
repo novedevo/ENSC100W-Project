@@ -9,7 +9,8 @@
 #include "Server.h"       //additional code to run webserver
 #include <ESP8266WiFi.h>  //basic functionality
 
-//using namespace std;
+//TODO: Implement persistant timestamp capabilities?
+//use blynk?
 
 //        example times 
 /*        1:00am    =>  010
@@ -118,7 +119,11 @@ BLYNK_WRITE(V0)
     if (currentMillis-millisOnLastBlynkFeeding >= 10000){
       //motor.spinMotor();
       millisOnLastBlynkFeeding = currentMillis;
-        Serial.println("Remote connection from Blynk App ordered pet fed:");
+        if(param.asInt() == 10) {
+          Serial.println("Remote connection from Blynk App ordered pet fed:");
+        } else {
+          Serial.println("Remote connection from Google Assistant ordered pet fed:");
+        }
         Serial.println("Running extra feeding cycle..");
     } else {
       Serial.println("Too little time has elapsed since last feeding.");
@@ -138,6 +143,13 @@ BLYNK_WRITE(V1){
 //To be called when Blynk App sends a number of turns
 BLYNK_WRITE(V2){
   numOfTurns = param.asInt();
+  Serial.println(numOfTurns);
+}
+
+BLYNK_WRITE(V3){
+  if (param.asInt()){
+    Serial.print("true");
+  } else {Serial.print("false");}
 }
 
 //################################
