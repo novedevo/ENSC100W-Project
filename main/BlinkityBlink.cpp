@@ -1,4 +1,9 @@
-#include "BlinkityBlink.h"
+//R.I.P. BlinkityBlink.cpp
+//We barely knew you
+//Leaving this here for compatibility, see main.ino for details and definition
+
+
+/*#include "BlinkityBlink.h"
 
 void BlinkityBlink:: resetMidnightMillis(){
   millisAsOfMostRecentMidnight = millis();
@@ -28,4 +33,4 @@ byte BlinkityBlink:: idealCaseTimeAsByte(){           //!#################
 
 void BlinkityBlink::nightlyReset(){
   resetMidnightMillis();
-}
+}*/

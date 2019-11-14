@@ -1,5 +1,5 @@
 #include "Additional.h"
-
+/*
 unsigned long Time::timeByteToMillis(byte timeByte){  //TODO: rewrite? understand?
     int hours = timeByte / 10;
     int minutes = (timeByte % 10) * 10;
@@ -12,7 +12,7 @@ unsigned long Time::timeByteToMillis(byte timeByte){  //TODO: rewrite? understan
   
     unsigned long timeInMillis = (hours * 60 + minutes) * 60 * 1000;
     return timeInMillis;
-}
+}*/
 
 void Time::setFeedingTimes(String timesAsString){
       const char *str = timesAsString.c_str();  //must be const, otherwise incorrect conversion
@@ -33,9 +33,12 @@ void Time::setFeedingTimes(String timesAsString){
 
 String Time::getFeedingTimes(){
   String returned = "";
-  for (int i = 0; i<4; i++){
+  for (int i = 0; i<3; i++){
     returned += feedingTimes[i];
+    returned += ",";
   }
+  returned += feedingTimes[3];
+  
   return returned;
 }
 
@@ -55,7 +58,7 @@ void Time::printFeedingTimes(){
     Serial.println(feedingTimes[i]);
   }
 }
-
+/*
 byte Time::millisToTimeByte(unsigned long timeInMillis) { //TODO: rewrite? understand?
   int hours = timeInMillis / 1000 / 60 / 60;
   int minutes = (timeInMillis / 1000 / 60 ) - hours * 60;
@@ -119,7 +122,7 @@ byte Time::improvedGetTimeByte(unsigned long* networkMillis, NTPClient* timeClie
     return getCurrentNetworkTimeByte(networkMillis, timeClient);
   }
 }
-
+*/
 void Time::resetFedTimes(){
   for (int i = 0; i<4; i++){
     fedTimes[i] = false;
@@ -127,16 +130,18 @@ void Time::resetFedTimes(){
 }
 
 void Time::prepFeedingTimes(byte currentTime){
+  Serial.println(currentTime);
   sortFeedingTimes();
-
+  printFeedingTimes();
   for (int i = 0; i<4; i++){
+    //Serial.println(i);
     if (feedingTimes[i]<currentTime){   //if we have already passed this feeding time
       fedTimes[i] = true;               //denote that the pet has been fed
       Serial.print(feedingTimes[i]);  
       Serial.println(" is earlier than current time, thus pet has been fed");
     } else {
       //int index = 5;  //TODO: why is this here
-      break;
+      continue;
     }
   }
 }
