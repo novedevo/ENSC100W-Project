@@ -8,6 +8,7 @@
 #include "Additional.h"   //Additional code, mainly Time class
 #include "Server.h"       //additional code to run webserver
 #include <ESP8266WiFi.h>  //basic functionality
+#include <Stepper.h>
 
 //TODO: Implement persistant timestamp capabilities?
 //use blynk?
@@ -37,15 +38,18 @@
 */
 
 //declaring constants and variables
-const char *ssid     = "Aesthetics_Guest";
-const char *password = "TB_Guest";
+const char *ssid     = "***REMOVED***";
+const char *password = "***REMOVED***";
 const char *auth = "***REMOVED***";  //auth key for Blynk
 
 const byte feedingTimes[4] = {70,120,190,0};  //default initialization
 const bool fedTimes[4] = {0,0,0,0};   //TODO: remove?
 
+const int stepsPerRevolution = 200;
 int numOfTurns = 1;   //number of turns the motor, and thus auger, will make
                       //equivalent to changing portion size
+int stepCount = 0;
+
 unsigned long currentMillis = 0;    //TODO: remove? replace with millis() calls?
 unsigned long millisOnLastTimeCheck = 0;    //TODO: remove?
 unsigned long millisOnLastBlynkFeeding = 0;    
@@ -105,6 +109,7 @@ Time myTime(feedingTimes);    //TODO: give Time class default initializations?
 BlynkTimer timer;
 //WidgetRTC rtc;      //TODO: remove?
 BlinkityBlink wink;   //* inherits from WidgetRTC
+Stepper myStepper(stepsPerRevolution, 3,4);
 
 
 
@@ -118,7 +123,7 @@ BLYNK_WRITE(V0)
   currentMillis = millis();
   if (param.asInt()){
     if (currentMillis-millisOnLastBlynkFeeding >= 10000){ //if it's been more than 10 seconds since last request
-      //motor.spinMotor();    //TODO: uncomment when motor functionality is merged.
+      spinMotor();    //TODO: uncomment when motor functionality is merged.
       millisOnLastBlynkFeeding = currentMillis;
         if (param.asInt() == 10) {
           Serial.println("Remote connection from Blynk App ordered pet fed:");
@@ -170,10 +175,13 @@ void setup(){
     Serial.print("Connecting to ");
     Serial.println(ssid);
 
+    
+    Blynk.begin(auth, ssid, password);
     CheckConnection();    //also initiates connection to wifi and blynkapp
     wink.begin();         //begin tracking time
     wink.updateBlynkFeedingTimes();   //send feeding times to blynkApp
 
+    myStepper.setSpeed(stepperSpeed);
 
     //Setup timer events
     //Values are given in milliseconds
@@ -205,13 +213,19 @@ void loop(){
     //server.handleClients(); //uncomment if webserver functionality is needed
 }
 
+void spinMotor(numOfTurns){
+  for (int i = 0; i<numOfTurns; i++){
+    myStepper.step(stepsPerRevolution);
+  }
+}
+
 void CheckIfItIsTimeToFeedThePet(){
   Serial.print("Current Blynk time is: ");
   Serial.println(wink.blynkTimeAsByte());
   
   if (myTime.itIsFeedingTime(wink.blynkTimeAsByte())){
     Serial.println("Thus, it is feeding time!");
-    //motor.spinMotor();
+    spinMotor();
   } else {
     Serial.println("Thus, it is not feeding time.");
   }
@@ -221,7 +235,13 @@ void CheckConnection(){   // check if connected to Blynk server
                           //! //TODO: Test if this actually works
   if(!Blynk.connected()){
     Serial.println("Not connected to Blynk");
-    Blynk.begin(auth, ssid, password);
+    if (Blynk.connect(10000)){
+      Serial.println("Connected to Blynk!");
+      
+    } else {
+      Serial.println("Not connected, failing through to backup...");
+    }
+    //TODO: break if certain time has passed
   } else {
     Serial.println("Connected to Blynk!");
   }
