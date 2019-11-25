@@ -46,6 +46,9 @@ const byte feedingTimes[4] = {70,120,190,0};  //default initialization
 const bool fedTimes[4] = {0,0,0,0};   //TODO: remove?
 
 const int stepsPerRevolution = 200;
+const int STEPPERPIN1 = 0;
+const int STEPPERPIN2 = 2;
+
 int numOfTurns = 1;   //number of turns the motor, and thus auger, will make
                       //equivalent to changing portion size
 int stepCount = 0;
@@ -109,7 +112,7 @@ Time myTime(feedingTimes);    //TODO: give Time class default initializations?
 BlynkTimer timer;
 //WidgetRTC rtc;      //TODO: remove?
 BlinkityBlink wink;   //* inherits from WidgetRTC
-Stepper myStepper(stepsPerRevolution, 3,4);
+Stepper myStepper(stepsPerRevolution, STEPPERPIN1, STEPPERPIN2);
 
 
 
@@ -137,6 +140,9 @@ BLYNK_WRITE(V0)
     }
   }
 }
+
+//TODO: heartbeat timeout???
+
 
 //To be called when Blynk App sends feeding times
 BLYNK_WRITE(V1){
