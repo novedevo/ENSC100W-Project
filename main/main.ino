@@ -6,12 +6,11 @@
 #include <BlynkSimpleEsp8266.h>   //for blynk control over wifi
 #include <WidgetRTC.h>    //for blynk real time clock
 #include "Additional.h"   //Additional code, mainly Time class
-#include "Server.h"       //additional code to run webserver
+//#include "Server.h"       //additional code to run webserver
 #include <ESP8266WiFi.h>  //basic functionality
 #include <Stepper.h>
 
-//TODO: Implement persistant timestamp capabilities?
-//use blynk?
+#define extraDebugPrint Serial
 
 //*       example times 
 /*        1:00am    =>  010
@@ -46,8 +45,13 @@ const byte feedingTimes[4] = {70,120,190,0};  //default initialization
 const bool fedTimes[4] = {0,0,0,0};   //TODO: remove?
 
 const int stepsPerRevolution = 200;
-const int STEPPERPIN1 = 0;
-const int STEPPERPIN2 = 2;
+const int stepperSpeed = 100;
+const int STEPPERPIN2 = 2;  //Labelled as D4 on silkscreen
+const int STEPPERPIN1 = 0;  //Labelled as D3 on silkscreen  //TODO: what pins?
+const int STEPSBACKWARD = -150;
+const int STEPSFORWARD = 300;
+
+const bool debugMode = true;
 
 int numOfTurns = 1;   //number of turns the motor, and thus auger, will make
                       //equivalent to changing portion size
@@ -92,6 +96,7 @@ class BlinkityBlink : public WidgetRTC {
     void nightlyReset();
     
     void updateBlynkFeedingTimes();   //sends data to blynkapp
+    void updateNumberOfTurns();
 };
 
 
@@ -125,7 +130,7 @@ BLYNK_WRITE(V0)
 {
   currentMillis = millis();
   if (param.asInt()){
-    if (currentMillis-millisOnLastBlynkFeeding >= 10000){ //if it's been more than 10 seconds since last request
+    if (currentMillis-millisOnLastBlynkFeeding >= 10000 || debugMode){ //if it's been more than 10 seconds since last request
       spinMotor();    //TODO: uncomment when motor functionality is merged.
       millisOnLastBlynkFeeding = currentMillis;
         if (param.asInt() == 10) {
@@ -155,12 +160,13 @@ BLYNK_WRITE(V1){
 //To be called when Blynk App sends a number of turns
 BLYNK_WRITE(V2){
   numOfTurns = param.asInt();
+  Serial.print("Turns changed to ");
   Serial.println(numOfTurns);
 }
 
 //Legacy code from early IFTTT testing
 //Was called when google assistant made a request
-//now deprecated in favour of different parametres for V0
+//now deprecated in favour of different parameters for V0
 //TODO: remove?
 BLYNK_WRITE(V3){
   if (param.asInt()){
@@ -186,6 +192,7 @@ void setup(){
     CheckConnection();    //also initiates connection to wifi and blynkapp
     wink.begin();         //begin tracking time
     wink.updateBlynkFeedingTimes();   //send feeding times to blynkApp
+    wink.updateNumberOfTurns();
 
     myStepper.setSpeed(stepperSpeed);
 
@@ -219,10 +226,20 @@ void loop(){
     //server.handleClients(); //uncomment if webserver functionality is needed
 }
 
-void spinMotor(numOfTurns){
+void spinMotor(){
   for (int i = 0; i<numOfTurns; i++){
-    myStepper.step(stepsPerRevolution);
+    
+    //digitalWrite(0,HIGH);
+    //delay(1000);      //to communicate with the arduino.
+    
+    myStepper.step(STEPSBACKWARD);
+    yield();                        //If we don't yield, the watchdog bites, throws a stack trace, and resets the module.
+    myStepper.step(STEPSFORWARD);
+    yield();                        //maximum safe length of time at 100 speed is around 500 steps, so we must yield here
+    myStepper.step(STEPSFORWARD);
+    yield();
   }
+  //digitalWrite (0,LOW); //SEEN AS PIN D3 ON BOARD
 }
 
 void CheckIfItIsTimeToFeedThePet(){
@@ -283,6 +300,10 @@ void BlinkityBlink::nightlyReset(){
 
 void BlinkityBlink::updateBlynkFeedingTimes(){
   Blynk.virtualWrite(V1, myTime.getFeedingTimes());
+}
+
+void updateNumberOfTurns(){
+  Blynk.virtualWrite(V2, numOfTurns);
 }
 
 //*##########################
