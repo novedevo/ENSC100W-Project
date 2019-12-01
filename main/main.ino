@@ -37,7 +37,7 @@
 */
 
 //declaring constants and variables
-const char *ssid     = "***REMOVED***";
+const char *ssid     = "DFW";
 const char *password = "***REMOVED***";
 const char *auth = "***REMOVED***";  //auth key for Blynk
 
@@ -96,7 +96,6 @@ class BlinkityBlink : public WidgetRTC {
     void nightlyReset();
     
     void updateBlynkFeedingTimes();   //sends data to blynkapp
-    void updateNumberOfTurns();
 };
 
 
@@ -192,7 +191,6 @@ void setup(){
     CheckConnection();    //also initiates connection to wifi and blynkapp
     wink.begin();         //begin tracking time
     wink.updateBlynkFeedingTimes();   //send feeding times to blynkApp
-    wink.updateNumberOfTurns();
 
     myStepper.setSpeed(stepperSpeed);
 
@@ -234,6 +232,8 @@ void spinMotor(){
     
     myStepper.step(STEPSBACKWARD);
     yield();                        //If we don't yield, the watchdog bites, throws a stack trace, and resets the module.
+    myStepper.step(STEPSBACKWARD);
+    yield();
     myStepper.step(STEPSFORWARD);
     yield();                        //maximum safe length of time at 100 speed is around 500 steps, so we must yield here
     myStepper.step(STEPSFORWARD);
@@ -300,10 +300,6 @@ void BlinkityBlink::nightlyReset(){
 
 void BlinkityBlink::updateBlynkFeedingTimes(){
   Blynk.virtualWrite(V1, myTime.getFeedingTimes());
-}
-
-void updateNumberOfTurns(){
-  Blynk.virtualWrite(V2, numOfTurns);
 }
 
 //*##########################
