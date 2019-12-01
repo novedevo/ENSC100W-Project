@@ -130,7 +130,7 @@ BLYNK_WRITE(V0)
   currentMillis = millis();
   if (param.asInt()){
     if (currentMillis-millisOnLastBlynkFeeding >= 10000 || debugMode){ //if it's been more than 10 seconds since last request
-      spinMotor();    //TODO: uncomment when motor functionality is merged.
+      spinMotor();
       millisOnLastBlynkFeeding = currentMillis;
         if (param.asInt() == 10) {
           Serial.println("Remote connection from Blynk App ordered pet fed:");
@@ -145,7 +145,7 @@ BLYNK_WRITE(V0)
   }
 }
 
-//TODO: heartbeat timeout???
+//TODO: why does heartbeat timeout
 
 
 //To be called when Blynk App sends feeding times
@@ -163,22 +163,27 @@ BLYNK_WRITE(V2){
   Serial.println(numOfTurns);
 }
 
-//Legacy code from early IFTTT testing
-//Was called when google assistant made a request
-//now deprecated in favour of different parameters for V0
-//TODO: remove?
+/*
+*Legacy code from early IFTTT testing
+Was called when google assistant made a request
+now deprecated in favour of different parameters for V0
+TODO: remove?
+*/
+/*
 BLYNK_WRITE(V3){
   if (param.asInt()){
     Serial.print("true");
   } else {Serial.print("false");}
 }
+*/
+
 
 //*################################
 //End Asynchronous Blynk Functions
 
 
 
-//Run once when the board is reset
+//Run once whenever the board is reset
 void setup(){  
     Serial.begin(9600);
     
@@ -188,7 +193,7 @@ void setup(){
 
     
     Blynk.begin(auth, ssid, password);
-    CheckConnection();    //also initiates connection to wifi and blynkapp
+    CheckConnection();    ////also initiates connection to wifi and blynkapp
     wink.begin();         //begin tracking time
     wink.updateBlynkFeedingTimes();   //send feeding times to blynkApp
 
@@ -208,15 +213,16 @@ void loop(){
       Blynk.run();      //magic blynk code, honestly
     }
     
-    timer.run();
+    timer.run();        //same tbh
     
-    if (firstRunOnly && year() != 1970){
+    if (firstRunOnly && year() != 1970){    //Time.lib returns unix time 0 (Jan 1 1970) by default
       currentTime = wink.blynkTimeAsByte();
       myTime.prepFeedingTimes(currentTime);
       firstRunOnly = false;
     }   //for some reason this didn't work in setup() so it is here
     
     //To reset at midnight:
+    //? change to if (!hour()){
     if (hour() == 0){
       myTime.resetFedTimes();
     }
@@ -255,16 +261,14 @@ void CheckIfItIsTimeToFeedThePet(){
 }
 
 void CheckConnection(){   // check if connected to Blynk server
-                          //! //TODO: Test if this actually works
   if(!Blynk.connected()){
     Serial.println("Not connected to Blynk");
-    if (Blynk.connect(10000)){
+    if (Blynk.connect(10000)){  //timeout in milliseconds
       Serial.println("Connected to Blynk!");
       
     } else {
       Serial.println("Not connected, failing through to backup...");
     }
-    //TODO: break if certain time has passed
   } else {
     Serial.println("Connected to Blynk!");
   }
@@ -286,7 +290,7 @@ void BlinkityBlink::resetMidnightMillis(){
 }
 
 void BlinkityBlink::updateTime(){
-  currentTimeAsByte = hour()*10+minute()/10;
+  currentTimeAsByte = hour()*10+minute()/10;  //tricks of integer math
 }
 
 byte BlinkityBlink::blynkTimeAsByte(){

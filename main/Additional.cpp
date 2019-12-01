@@ -13,7 +13,7 @@ void Time::setFeedingTimes(String timesAsString){
       while (p != nullptr && index < 4) { //while still in our array
         feedingTimes[index++] = atoi(p);  //atoi converts from char array to integer
         p = strtok(NULL, ",");  //seperates at character
-        //TODO: understand strtok and atoi a bit better
+        //TODO: understand strtok and atoi better
       }
   }
 
@@ -23,6 +23,7 @@ String Time::getFeedingTimes(){
     returned += feedingTimes[i];
     returned += ",";
   }
+  //TODO: use strcpy instead of this method
   returned += feedingTimes[3];
   
   return returned;
