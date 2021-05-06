@@ -53,7 +53,7 @@ void Time::resetFedTimes() {
 void Time::prepFeedingTimes(byte currentTime) {
     sortFeedingTimes();
       for (byte i = 0; i < 4; i++) {
-        if (feedingTimes[i] < currentTime) {    // if we have already passed this feeding time
+        if (feedingTimes[i] < currentTime) { // if we have already passed this feeding time
             fedTimes[i] = true; // denote that the pet has been fed
             Serial.print(feedingTimes[i]);
             Serial.println(" is earlier than current time, thus pet has been fed");
@@ -62,7 +62,7 @@ void Time::prepFeedingTimes(byte currentTime) {
 }
 
 bool Time::itIsFeedingTime(byte currentTime) {
-    byte index = 5; // TODO: why is this here, why does index need to be Time-scoped
+    byte index = 5;
     for (byte i = 0; i < 4; i++) { // using byte to save space, should only ever
                                   // iterate through 4 values
         if (!(fedTimes[i]) && (feedingTimes[i])) {
@@ -79,7 +79,7 @@ bool Time::itIsFeedingTime(byte currentTime) {
     Serial.print("Next feeding time is: ");
     Serial.println(feedingTimes[index]);
 
-    if (feedingTimes[index] <= currentTime) {        // if the next feeding time is <= the current time
+    if (feedingTimes[index] <= currentTime) { // if the next feeding time is <= the current time
         fedTimes[index] = true; // denote that the cat has been fed
         return true;
     } else {

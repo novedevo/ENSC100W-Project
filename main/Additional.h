@@ -12,7 +12,7 @@ private:
 public:
     // constructor, takes an array and populates feedingTimes with it
     Time(const byte (&feedingTimes)[4]) {
-        for (int i = 0; i < 4; i++) { //* cannot assign arrays to one another directly, must use loop
+        for (int i = 0; i < 4; i++) { // cannot assign arrays to one another directly, must use loop
             this->feedingTimes[i] = feedingTimes[i];
             this->fedTimes[i] = 0;
         }
